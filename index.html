@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobTracker — Lacak Lamaranmu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <h2>🎯 JobTracker</h2>
+    <span>Lacak semua lamaranmu</span>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item" data-page="dashboard">📊 Dashboard</button>
+    <button class="nav-item" data-page="tracker">📋 Job Tracker</button>
+    <button class="nav-item" data-page="sources">🌐 Sumber Lowongan</button>
+    <button class="nav-item" data-page="search">🔍 Cari Lowongan</button>
+    <button class="nav-item" data-page="profile">👤 Profil Saya</button>
+    <button class="nav-item" data-page="recommend">🤖 Rekomendasi AI</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div>JobTracker v2.0</div>
+    <div>Data tersimpan di browser</div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">📊 Export Excel</button>
+      <button class="btn btn-primary btn-sm" onclick="openAdd()">+ Tambah Lamaran</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="label">Total Lamaran</div>
+          <div class="value" id="stat-total">0</div>
+          <div class="sub">Semua status</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Interview</div>
+          <div class="value" id="stat-interview">0</div>
+          <div class="sub">Sedang proses</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Offer</div>
+          <div class="value" id="stat-offer">0</div>
+          <div class="sub">Tawaran diterima</div>
+        </div>
+        <div class="stat-card red">
+          <div class="label">Ditolak</div>
+          <div class="value" id="stat-rejected">0</div>
+          <div class="sub">Tidak lolos</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="label">Success Rate</div>
+          <div class="value" id="stat-rate">0%</div>
+          <div class="sub">Offer / Total</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-header"><h3>📊 Status Lamaran</h3></div>
+          <div class="card-body">
+            <div class="chart-bar" id="chart"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>🌐 Sumber Terbanyak</h3></div>
+          <div class="card-body" id="source-breakdown"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <h3>🕐 Lamaran Terbaru</h3>
+          <button class="btn btn-outline btn-sm" onclick="navigate('tracker')">Lihat Semua</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Perusahaan</th><th>Status</th><th>Tanggal</th><th>Prioritas</th></tr></thead>
+              <tbody id="recent-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER PAGE -->
+    <div class="page" id="page-tracker">
+      <div class="card">
+        <div class="card-body" style="padding:16px">
+          <div class="filter-row">
+            <input type="text" id="filter-search" class="form-control" placeholder="🔍 Cari perusahaan / posisi..." style="max-width:280px">
+            <select id="filter-status">
+              <option value="">Semua Status</option>
+              <option>Applied</option><option>Test</option><option>Interview</option>
+              <option>Offer</option><option>Rejected</option><option>Ghosted</option>
+            </select>
+            <select id="filter-source"><option value="">Semua Sumber</option></select>
+            <span id="tracker-count" style="margin-left:auto;font-size:13px;color:var(--muted);align-self:center"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Perusahaan / Posisi</th>
+                  <th>Status</th>
+                  <th>Sumber</th>
+                  <th>Tanggal</th>
+                  <th>Gaji</th>
+                  <th>Prioritas</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tracker-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCES PAGE -->
+    <div class="page" id="page-sources">
+      <div style="margin-bottom:20px">
+        <p style="font-size:14px;color:var(--muted)">Platform pencarian kerja terbaik yang direkomendasikan. Klik "Buka Platform" untuk langsung mengunjungi atau gunakan tombol 🔍 untuk mencari posisi tertentu.</p>
+      </div>
+      <div class="sources-grid" id="sources-grid"></div>
+    </div>
+
+    <!-- SEARCH PAGE -->
+    <div class="page" id="page-search">
+      <div class="card">
+        <div class="card-body">
+          <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Cari lowongan di semua platform sekaligus dengan satu kata kunci.</p>
+          <div class="search-bar">
+            <input type="text" id="global-search" class="form-control" placeholder="Contoh: Frontend Developer, Data Analyst, Product Manager...">
+            <button class="btn btn-primary" onclick="renderSearchLinks()">🔍 Cari di Semua Platform</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+            <span style="font-size:12px;color:var(--muted)">Populer:</span>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">Frontend Developer</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">Backend Developer</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">Data Analyst</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">UI/UX Designer</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">Product Manager</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('global-search').value=this.textContent;renderSearchLinks()">DevOps Engineer</button>
+          </div>
+        </div>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+
+      <!-- CV UPLOAD CARD -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><h3>📎 Upload CV — Auto Extract Profil</h3></div>
+        <div class="card-body">
+          <div id="cv-dropzone"
+            style="border:2px dashed #cbd5e1;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:#f8fafc"
+            onclick="document.getElementById('cv-file-input').click()"
+            ondragover="event.preventDefault();this.style.borderColor='#2563eb';this.style.background='#eff6ff'"
+            ondragleave="this.style.borderColor='#cbd5e1';this.style.background='#f8fafc'"
+            ondrop="event.preventDefault();this.style.borderColor='#cbd5e1';this.style.background='#f8fafc';handleCVUpload(event.dataTransfer.files[0])">
+            <div style="font-size:36px;margin-bottom:8px">📄</div>
+            <div style="font-weight:600;font-size:15px;margin-bottom:4px">Drag & drop CV kamu di sini</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px">atau klik untuk pilih file</div>
+            <div style="display:inline-flex;gap:8px">
+              <span style="background:#dbeafe;color:#1d4ed8;font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600">PDF</span>
+              <span style="background:#dcfce7;color:#15803d;font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600">DOCX</span>
+              <span style="background:#fef3c7;color:#92400e;font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600">TXT</span>
+            </div>
+          </div>
+          <input type="file" id="cv-file-input" accept=".pdf,.docx,.txt" style="display:none" onchange="handleCVUpload(this.files[0])">
+          <div id="upload-status"></div>
+          <div id="cv-preview"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-header"><h3>👤 Data Diri</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="prof-name" class="form-control" placeholder="Nama kamu">
+              </div>
+              <div class="form-group">
+                <label>Posisi / Title</label>
+                <input type="text" id="prof-title" class="form-control" placeholder="Contoh: Frontend Developer">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Pengalaman Kerja (tahun)</label>
+                <input type="number" id="prof-experience" class="form-control" min="0" max="30" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>Level yang Dicari</label>
+                <select id="prof-level" class="form-control">
+                  <option value="any">Semua Level</option>
+                  <option value="fresh">Fresh Graduate</option>
+                  <option value="junior">Junior (0-2 thn)</option>
+                  <option value="mid">Mid (2-5 thn)</option>
+                  <option value="senior">Senior (5+ thn)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>⚙️ Preferensi Kerja</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Tipe Kerja</label>
+              <select id="prof-worktype" class="form-control">
+                <option value="any">Semua Tipe</option>
+                <option value="remote">Remote / WFH</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="onsite">Onsite</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Gaji Min (juta)</label>
+                <input type="number" id="prof-salary-min" class="form-control" placeholder="10">
+              </div>
+              <div class="form-group">
+                <label>Gaji Max (juta)</label>
+                <input type="number" id="prof-salary-max" class="form-control" placeholder="20">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Lokasi Preferensi</label>
+              <input type="text" id="prof-locations" class="form-control" placeholder="Jakarta, Bandung, Remote">
+              <small style="color:var(--muted);font-size:11px">Pisahkan dengan koma</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>🛠️ Skill Kamu</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Daftar Skill</label>
+            <textarea id="prof-skills" class="form-control" rows="3" placeholder="javascript, react, typescript, nodejs, css, html, git..."></textarea>
+            <small style="color:var(--muted);font-size:11px">Pisahkan dengan koma. Contoh: javascript, react, python, figma, sql</small>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Klik untuk tambah skill populer:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="skill-suggestions"></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:4px">
+        <button class="btn btn-primary" onclick="saveProfileForm()">💾 Simpan Profil & Update Rekomendasi</button>
+      </div>
+    </div>
+
+    <!-- RECOMMEND PAGE -->
+    <div class="page" id="page-recommend">
+      <div class="card" id="analysis-box" style="margin-bottom:20px">
+        <div class="card-body">
+          <div class="empty-state"><i>👤</i><p>Isi profil kamu dulu untuk melihat analisis.</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>🤖 Rekomendasi Lowongan untuk Kamu</h3>
+          <button class="btn btn-outline btn-sm" onclick="navigate('profile')">✏️ Edit Profil</button>
+        </div>
+        <div class="card-body" id="rec-list">
+          <div class="empty-state"><i>🎯</i><p>Isi profil kamu dulu untuk mendapatkan rekomendasi.</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="width:640px">
+    <div class="modal-header">
+      <h3 id="detail-modal-title"></h3>
+      <button class="btn-close" onclick="closeDetailModal()">×</button>
+    </div>
+    <div class="modal-body" id="detail-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDetailModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah/Edit -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Tambah Lamaran</h3>
+      <button class="btn-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="app-form" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nama Perusahaan *</label>
+            <input type="text" id="app-company" class="form-control" placeholder="Contoh: Tokopedia" required>
+          </div>
+          <div class="form-group">
+            <label>Posisi *</label>
+            <input type="text" id="app-position" class="form-control" placeholder="Contoh: Frontend Developer" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Sumber Lowongan</label>
+            <select id="app-source" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="app-status" class="form-control">
+              <option>Applied</option><option>Test</option><option>Interview</option>
+              <option>Offer</option><option>Rejected</option><option>Ghosted</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Apply</label>
+            <input type="date" id="app-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Prioritas</label>
+            <select id="app-priority" class="form-control">
+              <option>High</option><option selected>Medium</option><option>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Range Gaji</label>
+            <input type="text" id="app-salary" class="form-control" placeholder="Contoh: 10-15jt">
+          </div>
+          <div class="form-group">
+            <label>Lokasi</label>
+            <input type="text" id="app-location" class="form-control" placeholder="Contoh: Jakarta">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Link Lowongan</label>
+          <input type="url" id="app-url" class="form-control" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>Catatan</label>
+          <textarea id="app-notes" class="form-control" rows="3" placeholder="Catatan proses rekrutmen, jadwal interview, dll..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveApp()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+
+<script src="js/jobs.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/cv-parser.js"></script>
+<script src="js/recommend.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
